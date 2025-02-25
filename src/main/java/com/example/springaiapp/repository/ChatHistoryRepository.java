@@ -1,7 +1,6 @@
 package com.example.springaiapp.repository;
 
 import com.example.springaiapp.model.ChatHistory;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

@@ -6,4 +6,3 @@ CREATE TABLE IF NOT EXISTS chat_history (
     embedding TEXT NOT NULL, -- Store embedding as JSON array string
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
