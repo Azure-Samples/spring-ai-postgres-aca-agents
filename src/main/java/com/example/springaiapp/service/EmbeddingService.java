@@ -2,13 +2,11 @@ package com.example.springaiapp.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.embedding.EmbeddingClient;
-import org.springframework.ai.document.Document;
+import org.springframework.ai.azure.openai.AzureOpenAiEmbeddingModel;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import jakarta.annotation.PostConstruct;
-import java.util.List;
 
 /**
  * Service for generating text embeddings using Azure OpenAI.
@@ -23,14 +21,11 @@ import java.util.List;
 public class EmbeddingService {
     private static final Logger logger = LoggerFactory.getLogger(EmbeddingService.class);
     
-    private final EmbeddingClient embeddingClient;
+    @Autowired
+    private AzureOpenAiEmbeddingModel embeddingModel;
     
     @Value("${spring.ai.azure.openai.embedding.options.deployment-name}")
     private String embeddingDeploymentName;
-    
-    public EmbeddingService(@Qualifier("azureOpenAiEmbeddingClient") EmbeddingClient embeddingClient) {
-        this.embeddingClient = embeddingClient;
-    }
     
     @PostConstruct
     private void init() {
@@ -42,12 +37,11 @@ public class EmbeddingService {
             logger.debug("Generating embedding for text of length: {} using deployment: {}", 
                         text.length(), embeddingDeploymentName);
             
-            Document document = new Document(text);
-            List<Double> embedding = embeddingClient.embed(document);
+            float[] embedding = embeddingModel.embed(text);
             
-            double[] result = new double[embedding.size()];
-            for (int i = 0; i < embedding.size(); i++) {
-                result[i] = embedding.get(i);
+            double[] result = new double[embedding.length];
+            for (int i = 0; i < embedding.length; i++) {
+                result[i] = embedding[i];
             }
             
             logger.debug("Successfully generated embedding of size: {}", result.length);
