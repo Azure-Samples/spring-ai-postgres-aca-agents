@@ -2,8 +2,7 @@ package com.example.springaiapp.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.ChatClient;
-import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,8 +12,8 @@ public class BlogWriterService {
 
     private final ChatClient chatClient;
 
-    public BlogWriterService(ChatClient chatClient) {
-        this.chatClient = chatClient;
+    public BlogWriterService(ChatClient.Builder chatClientBuilder) {
+        this.chatClient = chatClientBuilder.build();
     }
 
     public String generateBlogPost(String topic) {
@@ -27,7 +26,7 @@ public class BlogWriterService {
             Include relevant examples and maintain a conversational yet professional tone.
             """, topic);
         
-        String draft = chatClient.call(new Prompt(initialPrompt)).getResult().getOutput().getContent();
+        String draft = chatClient.prompt(initialPrompt).call().chatResponse().getResult().getOutput().getText();
         logger.info("Initial draft generated");
         logger.debug("Initial draft content:\n{}", draft);
 
@@ -52,7 +51,7 @@ public class BlogWriterService {
                 %s
                 """, draft);
             
-            String evaluation = chatClient.call(new Prompt(evalPrompt)).getResult().getOutput().getContent();
+            String evaluation = chatClient.prompt(evalPrompt).call().chatResponse().getResult().getOutput().getText();
             logger.info("Iteration {} - Editor's evaluation:\n{}", iteration, evaluation);
 
             if (evaluation.toUpperCase().contains("PASS")) {
@@ -75,7 +74,7 @@ public class BlogWriterService {
                     Provide the complete improved version while maintaining the original topic and structure.
                     """, feedback, draft);
                 
-                draft = chatClient.call(new Prompt(refinePrompt)).getResult().getOutput().getContent();
+                draft = chatClient.prompt(refinePrompt).call().chatResponse().getResult().getOutput().getText();
                 logger.info("Iteration {} - Draft revised", iteration);
                 logger.debug("Revised draft content:\n{}", draft);
             }
