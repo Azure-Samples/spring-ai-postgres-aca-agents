@@ -75,14 +75,12 @@ public class RagService {
             
             // Step 2: Find similar previous Q&As
             logger.debug("Finding similar contexts");
-
             List<ChatHistory> similarContexts = repository.findNearestNeighbors(queryEmbedding, 3);
             logger.debug("Found {} similar contexts", similarContexts.size());
-            
+
             // Step 3: Build prompt with context from similar Q&As
             String context = similarContexts.stream()
                 .map(ch -> String.format("Q: %s\nA: %s", ch.getPrompt(), ch.getResponse()))
-                //.map(ch -> String.format("%s", ch.getText()))
                 .collect(Collectors.joining("\n\n"));
                 
             logger.debug("Built context with {} characters", context.length());
