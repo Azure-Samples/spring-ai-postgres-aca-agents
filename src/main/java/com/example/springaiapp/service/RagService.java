@@ -6,16 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatResponse;
-//import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-// import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-// import org.springframework.ai.document.Document;
 import java.util.List;
-// import java.util.Map;
 import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
 
@@ -53,22 +48,6 @@ public class RagService {
     
     @Value("${spring.ai.azure.openai.embedding.options.deployment-name}")
     private String embeddingDeploymentName;
-        
-    //@Autowired
-    //VectorStore vectorStore;
-
-    // List<Document> documents = List.of(
-    //     new Document("3e1a1af7-c872-4e36-9faa-fe53b9613c69",
-    //                  "At Microsoft, Java is used by various teams and in multiple projects, " +
-    //                  "particularly in areas such as cloud services (e.g., Azure), " +
-    //                  "enterprise applications (e.g., LinkedIn), and cross-platform development (e.g., Minecraft). " +
-    //                  "Developers working on applications that require integration with Java-based solutions " + 
-    //                  "or those building on Java ecosystems may utilize Java as part of their technology stack. " +
-    //                  "Additionally, Microsoft provides support for Java developers through tools " +
-    //                  "and services, including Azure SDKs for Java and integration with Visual Studio Code. " +
-    //                  "Java is also prominent in open-source projects and contributions made by Microsoft, " +
-    //                  "reflecting its versatility and importance in the software development landscape.",
-    //                  Map.of("prompt", "Who uses Java in Microsoft?")));
     
     public RagService(
             ChatClient.Builder chatClientBuilder,
@@ -81,7 +60,6 @@ public class RagService {
     
     @PostConstruct
     private void init() {
-        //vectorStore.add(documents);
         logger.info("RagService initialized with chat deployment: {}, embedding deployment: {}", 
                    chatDeploymentName, embeddingDeploymentName);
     }
@@ -100,8 +78,6 @@ public class RagService {
 
             List<ChatHistory> similarContexts = repository.findNearestNeighbors(queryEmbedding, 3);
             logger.debug("Found {} similar contexts", similarContexts.size());
-            // List<Document> similarContexts = vectorStore.similaritySearch(SearchRequest.builder().query(query).topK(3).build());
-            // logger.debug("Found {} similar contexts", similarContexts);
             
             // Step 3: Build prompt with context from similar Q&As
             String context = similarContexts.stream()
@@ -111,8 +87,6 @@ public class RagService {
                 
             logger.debug("Built context with {} characters", context.length());
 
-            //                Use these relevant documents as context for answering the new question:                
-            //                Relevant documents:
             String promptText = String.format("""
                 Use these previous Q&A pairs as context for answering the new question:
                 
