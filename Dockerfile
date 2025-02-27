@@ -1,14 +1,17 @@
 # Build stage
-FROM maven:3.9.4-eclipse-temurin-17 AS build
+FROM mcr.microsoft.com/openjdk/jdk:21-mariner AS build
 WORKDIR /app
-COPY pom.xml ./
-RUN mvn dependency:go-offline  # Cache dependencies
+COPY mvnw* /app/
+COPY .mvn /app/.mvn
+COPY pom.xml /app
 COPY src ./src
+RUN chmod +x ./mvnw
+RUN mvn dependency:go-offline  # Cache dependencies
 RUN mvn package -DskipTests
 
 # Runtime stage
-FROM eclipse-temurin:17-jre
+FROM mcr.microsoft.com/openjdk/jdk:21-mariner
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/usr/bin/java", "-jar", "app.jar"]
