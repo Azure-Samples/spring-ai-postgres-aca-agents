@@ -1,12 +1,6 @@
 # Azure OpenAI Configuration
 spring.ai.azure.openai.api-key=your-api-key-here
 spring.ai.azure.openai.endpoint=your-endpoint-here
-spring.ai.azure.openai.chat.model=your-chat-model
-spring.ai.azure.openai.embedding.model=your-embedding-model
-spring.ai.azure.openai.chat.api-version=2025-01-01-preview
-spring.ai.azure.openai.embedding.api-version=2025-01-01-preview
-spring.ai.azure.openai.chat.options.model=your-chat-model
-spring.ai.azure.openai.embedding.options.model=your-embedding-model
 spring.ai.azure.openai.chat.options.deployment-name=your-chat-deployment
 spring.ai.azure.openai.embedding.options.deployment-name=your-embedding-deployment
 
@@ -18,14 +12,16 @@ spring.datasource.password=your-password
 # Initialize schema and data
 spring.sql.init.mode=always
 spring.sql.init.schema-locations=classpath:schema.sql
-spring.sql.init.data-locations=classpath:data.sql
 
 # Datasource Configuration
 spring.datasource.driver-class-name=org.postgresql.Driver
 spring.datasource.hikari.maximum-pool-size=5
 
+# Spring Shell Configuration
+# spring.shell.interactive.enabled=false
+
 # Logging Configuration
-logging.level.com.example.springaiapp=INFO
+logging.level.com.example.springaiapp=DEBUG
 logging.level.org.springframework.ai=INFO
 logging.level.org.springframework.jdbc.core=INFO
 logging.level.com.azure=WARN
