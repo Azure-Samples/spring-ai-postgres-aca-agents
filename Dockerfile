@@ -1,13 +1,12 @@
 # Build stage
 FROM mcr.microsoft.com/openjdk/jdk:21-mariner AS build
 WORKDIR /app
-COPY mvnw* /app/
-COPY .mvn /app/.mvn
-COPY pom.xml /app
+COPY mvnw* .
+COPY .mvn ./.mvn
+COPY pom.xml .
 COPY src ./src
 RUN chmod +x ./mvnw
-RUN mvn dependency:go-offline  # Cache dependencies
-RUN mvn package -DskipTests
+RUN ./mvnw dependency:go-offline package -DskipTests
 
 # Runtime stage
 FROM mcr.microsoft.com/openjdk/jdk:21-mariner
