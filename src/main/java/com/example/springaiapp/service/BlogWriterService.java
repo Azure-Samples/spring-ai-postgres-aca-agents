@@ -3,6 +3,8 @@ package com.example.springaiapp.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,7 +15,11 @@ public class BlogWriterService {
     private final ChatClient chatClient;
 
     public BlogWriterService(ChatClient.Builder chatClientBuilder) {
-        this.chatClient = chatClientBuilder.build();
+        // Add SimpleLoggerAdvisor to log requests and responses
+        this.chatClient = chatClientBuilder
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .build();
+        logger.info("BlogWriterService initialized with ChatClient and SimpleLoggerAdvisor");
     }
 
     public String generateBlogPost(String topic) {
@@ -26,15 +32,20 @@ public class BlogWriterService {
             Include relevant examples and maintain a conversational yet professional tone.
             """, topic);
         
-        String draft = chatClient.prompt(initialPrompt).call().chatResponse().getResult().getOutput().getText();
-        logger.info("Initial draft generated");
-        logger.debug("Initial draft content:\n{}", draft);
+        logger.info("Sending initial draft generation prompt to AI model");
+        String draft = chatClient.prompt()
+                .user(initialPrompt)
+                .call()
+                .content();
+        logger.info("Initial draft successfully generated for topic: {}", topic);
 
         // Enter evaluator-optimizer loop for refinement
         boolean approved = false;
         int iteration = 1;
         
         while (!approved && iteration <= MAX_ITERATIONS) {
+            logger.info("Starting iteration {} of blog refinement", iteration);
+            
             // Editor: Evaluate the current draft
             String evalPrompt = String.format("""
                 You are a critical blog editor. Evaluate the following blog draft and respond with either:
@@ -51,16 +62,19 @@ public class BlogWriterService {
                 %s
                 """, draft);
             
-            String evaluation = chatClient.prompt(evalPrompt).call().chatResponse().getResult().getOutput().getText();
-            logger.info("Iteration {} - Editor's evaluation:\n{}", iteration, evaluation);
-
+            logger.info("Sending draft for editorial evaluation (iteration: {})", iteration);
+            String evaluation = chatClient.prompt()
+                    .user(evalPrompt)
+                    .call()
+                    .content();
+            
             if (evaluation.toUpperCase().contains("PASS")) {
                 approved = true;
                 logger.info("Draft approved by editor on iteration {}", iteration);
             } else {
                 // Extract feedback and refine the draft
                 String feedback = extractFeedback(evaluation);
-                logger.info("Editor feedback (iteration {}): {}", iteration, feedback);
+                logger.info("Editor feedback received (iteration {}): {}", iteration, feedback);
                 
                 // Writer: Refine the draft using feedback
                 String refinePrompt = String.format("""
@@ -74,15 +88,20 @@ public class BlogWriterService {
                     Provide the complete improved version while maintaining the original topic and structure.
                     """, feedback, draft);
                 
-                draft = chatClient.prompt(refinePrompt).call().chatResponse().getResult().getOutput().getText();
-                logger.info("Iteration {} - Draft revised", iteration);
-                logger.debug("Revised draft content:\n{}", draft);
+                logger.info("Requesting draft revision based on feedback (iteration: {})", iteration);
+                draft = chatClient.prompt()
+                        .user(refinePrompt)
+                        .call()
+                        .content();
+                logger.info("Revised draft received for iteration {}", iteration);
             }
             iteration++;
         }
 
         if (!approved) {
             logger.warn("Maximum iterations ({}) reached without editor approval", MAX_ITERATIONS);
+        } else {
+            logger.info("Blog post generation completed successfully for topic: {}", topic);
         }
 
         return draft;
