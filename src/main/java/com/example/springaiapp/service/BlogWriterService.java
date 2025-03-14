@@ -51,6 +51,10 @@ public class BlogWriterService {
      * 4. Refine the draft based on feedback
      * 5. Repeat until approved or max iterations reached
      * 
+     * Note: This implementation ensures at least one iteration of feedback and improvement
+     * to demonstrate the full evaluator-optimizer agent pattern, even if the initial draft
+     * is of high quality.
+     * 
      * @param topic The blog post topic
      * @return A refined blog post with a maximum of 10 sentences
      */
@@ -84,15 +88,17 @@ public class BlogWriterService {
         // Setup for the iterative improvement process
         boolean approved = false;
         int iteration = 1;
+        boolean forceFirstIteration = true; // Force at least one round of feedback to demonstrate the pattern
         
-        while (!approved && iteration <= MAX_ITERATIONS) {
+        // Continue until we reach max iterations or get approval (but always do at least one iteration)
+        while ((!approved && iteration <= MAX_ITERATIONS) || forceFirstIteration) {
             logger.info("Starting iteration {} of blog refinement", iteration);
             
             // PHASE 2A: EDITOR AGENT
             // Prompt the Editor agent to evaluate the current draft
             String evalPrompt = String.format("""
-                You are a critical blog editor. Evaluate the following blog draft and respond with either:
-                PASS - if the draft is well-written, engaging, and complete
+                You are a critical blog editor with extremely high standards. Evaluate the following blog draft and respond with either:
+                PASS - if the draft is exceptional, well-written, engaging, and complete
                 NEEDS_IMPROVEMENT - followed by specific, actionable feedback on what to improve
                 
                 Focus on:
@@ -102,8 +108,12 @@ public class BlogWriterService {
                 - Structure and organization
                 - Strict adherence to the 10-sentence maximum length requirement
                 
-                IMPORTANT: The blog MUST have no more than 10 sentences total. Count the sentences carefully.
-                If the draft exceeds 10 sentences, it must receive a NEEDS_IMPROVEMENT rating with feedback to reduce length.
+                IMPORTANT EVALUATION RULES:
+                1. The blog MUST have no more than 10 sentences total. Count the sentences carefully.
+                2. For the first iteration, ALWAYS respond with NEEDS_IMPROVEMENT regardless of quality.
+                3. Be extremely thorough in your evaluation and provide detailed feedback.
+                4. If the draft exceeds 10 sentences, it must receive a NEEDS_IMPROVEMENT rating.
+                5. Even well-written drafts should receive suggestions for improvement in early iterations.
                 
                 Draft:
                 %s
@@ -116,8 +126,13 @@ public class BlogWriterService {
                     .call()
                     .content();
             
+            // After first iteration, remove the force flag
+            if (forceFirstIteration) {
+                forceFirstIteration = false;
+            }
+            
             // Check if the Editor agent approves the draft
-            if (evaluation.toUpperCase().contains("PASS")) {
+            if (evaluation.toUpperCase().contains("PASS") && iteration > 1) { // Only allow PASS after first iteration
                 // Draft is approved, exit the loop
                 approved = true;
                 logger.info("Draft approved by editor on iteration {}", iteration);
@@ -172,6 +187,9 @@ public class BlogWriterService {
     /**
      * Enhanced version of generateBlogPost that also returns metadata about the generation process.
      * 
+     * This method ensures at least one feedback-improvement cycle occurs to demonstrate
+     * the full evaluator-optimizer pattern in action, regardless of initial draft quality.
+     * 
      * @param topic The blog post topic
      * @return A BlogGenerationResult containing the content and metadata
      */
@@ -211,15 +229,17 @@ public class BlogWriterService {
         // Setup for the iterative improvement process
         boolean approved = false;
         int iteration = 1;
+        boolean forceFirstIteration = true; // Force at least one feedback cycle to demonstrate the pattern
         
-        while (!approved && iteration <= MAX_ITERATIONS) {
+        // Continue until we reach max iterations or get approval (but always do at least one iteration)
+        while ((!approved && iteration <= MAX_ITERATIONS) || forceFirstIteration) {
             logger.info("Starting iteration {} of blog refinement", iteration);
             
             // PHASE 2A: EDITOR AGENT
             // Prompt the Editor agent to evaluate the current draft
             String evalPrompt = String.format("""
-                You are a critical blog editor. Evaluate the following blog draft and respond with either:
-                PASS - if the draft is well-written, engaging, and complete
+                You are a critical blog editor with extremely high standards. Evaluate the following blog draft and respond with either:
+                PASS - if the draft is exceptional, well-written, engaging, and complete
                 NEEDS_IMPROVEMENT - followed by specific, actionable feedback on what to improve
                 
                 Focus on:
@@ -229,8 +249,12 @@ public class BlogWriterService {
                 - Structure and organization
                 - Strict adherence to the 10-sentence maximum length requirement
                 
-                IMPORTANT: The blog MUST have no more than 10 sentences total. Count the sentences carefully.
-                If the draft exceeds 10 sentences, it must receive a NEEDS_IMPROVEMENT rating with feedback to reduce length.
+                IMPORTANT EVALUATION RULES:
+                1. The blog MUST have no more than 10 sentences total. Count the sentences carefully.
+                2. For the first iteration, ALWAYS respond with NEEDS_IMPROVEMENT regardless of quality.
+                3. Be extremely thorough in your evaluation and provide detailed feedback.
+                4. If the draft exceeds 10 sentences, it must receive a NEEDS_IMPROVEMENT rating.
+                5. Even well-written drafts should receive suggestions for improvement in early iterations.
                 
                 Draft:
                 %s
@@ -243,10 +267,15 @@ public class BlogWriterService {
                     .call()
                     .content();
             
+            // After first iteration, remove the force flag
+            if (forceFirstIteration) {
+                forceFirstIteration = false;
+            }
+            
             estimateTokenUsage(result, evalPrompt, evaluation);
             
             // Check if the Editor agent approves the draft
-            if (evaluation.toUpperCase().contains("PASS")) {
+            if (evaluation.toUpperCase().contains("PASS") && iteration > 1) { // Only allow PASS after first iteration
                 // Draft is approved, exit the loop
                 approved = true;
                 logger.info("Draft approved by editor on iteration {}", iteration);
